@@ -39,6 +39,9 @@ const Collection = ({ collection, index, scrollContainers, scrollPositions, setS
     });
   };
 
+  // Check if the container is scrollable
+  const isScrollable = scrollPositions[index]?.scrollableWidth > scrollPositions[index]?.actualWidth;
+
   return (
     <div className="max-w-7xl mx-auto pt-4 sm:px-6 lg:px-8">
       <div className="px-4 sm:px-0">
@@ -68,12 +71,17 @@ const Collection = ({ collection, index, scrollContainers, scrollPositions, setS
             </div>
 
             {/* Arrows */}
-            <div className="absolute left-0 top-0 bottom-0 flex items-center justify-center z-30 cursor-pointer" onClick={scrollLeft}>
-              <ChevronLeftIcon className="w-6 h-6 mx-auto text-gray-600" />
-            </div>
-            <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center z-30 cursor-pointer" onClick={scrollRight}>
-              <ChevronRightIcon className="w-6 h-6 mx-auto text-gray-600" />
-            </div>
+            {/* Hide arrows when the container is not scrollable */}
+            {isScrollable && (
+              <>
+                <div className="absolute left-0 top-0 bottom-0 flex items-center justify-center z-30 cursor-pointer" onClick={scrollLeft}>
+                  <ChevronLeftIcon className="w-6 h-6 mx-auto text-gray-600" />
+                </div>
+                <div className="absolute right-0 top-0 bottom-0 flex items-center justify-center z-30 cursor-pointer" onClick={scrollRight}>
+                  <ChevronRightIcon className="w-6 h-6 mx-auto text-gray-600" />
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -82,7 +90,7 @@ const Collection = ({ collection, index, scrollContainers, scrollPositions, setS
 };
 
 const Dashboard = () => {
-  const scrollContainers = useRef([]);
+  const [scrollContainers, setScrollContainers] = useState([]);
   const [scrollPositions, setScrollPositions] = useState([]);
   const [collections, setCollections] = useState([]);
 
@@ -92,6 +100,10 @@ const Dashboard = () => {
       try {
         const collections = await getCollections();
         setCollections(collections);
+
+        // Create refs for each collection once we have the collections data
+        const newScrollContainers = collections.map(() => useRef(null));
+        setScrollContainers(newScrollContainers);
       } catch (error) {
         console.error('Error fetching collections:', error);
       }
@@ -116,6 +128,24 @@ const Dashboard = () => {
     };
   }, []); // Add collections as a dependency here
 
+  // Update the state with the scrollable and actual width of each container
+  useEffect(() => {
+    const updateScrollableWidth = () => {
+      const updatedScrollPositions = scrollContainers.map((ref) => {
+        return {
+          scrollableWidth: ref.current.scrollWidth,
+          actualWidth: ref.current.offsetWidth,
+        };
+      });
+      setScrollPositions(updatedScrollPositions);
+    };
+    updateScrollableWidth();
+    window.addEventListener('resize', updateScrollableWidth);
+    return () => {
+      window.removeEventListener('resize', updateScrollableWidth);
+    };
+  }, [scrollContainers]);
+
   return (
     <div className="bg-gray-50 min-h-screen">
       {collections.map((collection, i) => (
@@ -123,7 +153,7 @@ const Dashboard = () => {
           key={i}
           collection={collection}
           index={i}
-          scrollContainers={scrollContainers.current}
+          scrollContainers={scrollContainers}
           scrollPositions={scrollPositions}
           setScrollPositions={setScrollPositions}
         />
