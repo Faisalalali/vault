@@ -7,7 +7,7 @@ const Home = () => {
   return (
     <div>
       {/* <SplashScreen /> */}
-      {/* <LandingPage /> */}
+      <LandingPage />
       <Dashboard />
     </div>
   );

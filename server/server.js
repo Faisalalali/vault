@@ -1,16 +1,33 @@
 // server/server.js
-import express from 'express';
-import http from 'http';
-import { initializeSocketIO } from '@/utils/socketManager';
+const express = require('express');
+const { createServer } = require('http');
+const { Server } = require('socket.io');
+const next = require('next');
+const cors = require('cors');
 
-const app = express();
-const server = http.createServer(app);
-const port = process.env.PORT || 5000;
+const dev = process.env.NODE_ENV !== 'production';
+const app = next({ dev });
+const handle = app.getRequestHandler();
 
-// Start the Express server
-server.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+// Custom server setup
+const expressApp = express();
+expressApp.use(cors());
+const httpServer = createServer(expressApp);
+
+// Import the socket initialization function
+const { initializeSocket } = require('../lib/socket');
+
+// Socket.io connection and event handling
+initializeSocket(httpServer); // Call the function to set up the socket
+
+// Handle all Next.js requests
+app.prepare().then(() => {
+  expressApp.all('*', (req, res) => {
+    return handle(req, res);
+  });
+
+  const PORT = process.env.PORT || 3000;
+  httpServer.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
 });
-
-// Initialize Socket.IO and pass the server to the socket manager
-initializeSocketIO(server);

@@ -1,9 +1,7 @@
 // components/Dashboard.js
 import { useState, useRef, useEffect } from 'react';
-import axios from 'axios';
-import socketIOClient from 'socket.io-client'; // Import socket.io-client
-
-const ENDPOINT = 'http://localhost:5000'; // Replace with the correct endpoint of your server
+import { io } from 'socket.io-client';
+import { getCollections } from '../utils/apiHelpers';
 
 import {
   InboxArrowDownIcon,
@@ -86,37 +84,37 @@ const Collection = ({ collection, index, scrollContainers, scrollPositions, setS
 const Dashboard = () => {
   const scrollContainers = useRef([]);
   const [scrollPositions, setScrollPositions] = useState([]);
-
   const [collections, setCollections] = useState([]);
-  const [newCollection, setNewCollection] = useState({ name: '', icon: '' });
-
-  const collectionsUpdateHandler = (data) => {
-    console.log('collections-update event received:', data);
-    setCollections(data);
-  };
 
   useEffect(() => {
-    const socket = socketIOClient(ENDPOINT); // Connect to the server using socket.io-client
-
-    const fetchCollections = async () => {
+    // Function to fetch collections from the database
+    async function fetchCollections() {
       try {
-        const response = await axios.get('/api/collections');
-        const data = response.data;
-        setCollections(data);
+        const collections = await getCollections();
+        setCollections(collections);
       } catch (error) {
         console.error('Error fetching collections:', error);
       }
-    };
+    }
 
+    // Fetch initial collections data
     fetchCollections();
 
-    // Set up a Socket.IO listener to receive real-time updates
-    socket.on('collections-updated', collectionsUpdateHandler);
+    // Socket.io setup for real-time changes
+    const socket = io(
+      process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000'
+    );
 
+    // Listen for real-time changes and update the collections state accordingly
+    socket.on('databaseChange', (change) => {
+      fetchCollections();
+    });
+
+    // Clean up the socket connection on component unmount
     return () => {
-      socket.disconnect(); // Disconnect the socket when the component unmounts
+      socket.disconnect();
     };
-  }, []);
+  }, []); // Add collections as a dependency here
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -130,26 +128,6 @@ const Dashboard = () => {
           setScrollPositions={setScrollPositions}
         />
       ))}
-      {/* Form for adding new collection */}
-      {/* <form className="max-w-7xl mx-auto p-4" onSubmit={handleSubmit}>
-        <input
-          type="text"
-          name="name"
-          placeholder="Collection Name"
-          value={newCollection.name}
-          onChange={handleInputChange}
-          required
-        />
-        <input
-          type="text"
-          name="icon"
-          placeholder="Icon URL"
-          value={newCollection.icon}
-          onChange={handleInputChange}
-          required
-        />
-        <button type="submit">Add Collection</button>
-      </form> */}
     </div>
   );
 };
