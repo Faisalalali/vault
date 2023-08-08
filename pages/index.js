@@ -1,7 +1,7 @@
 // pages/index.js
-import SplashScreen from '../components/SplashScreen';
-import LandingPage from '../components/LandingPage';
-import Dashboard from '../components/Dashboard';
+import SplashScreen from '../components/Splash/SplashScreen';
+import LandingPage from '../components/Landing/LandingPage';
+import Dashboard from '../components/Dashboard/Dashboard';
 
 const Home = () => {
   return (

@@ -1,7 +1,7 @@
 // components/SplashScreen.js
 import { useEffect, useState } from 'react';
 import styles from './SplashScreen.module.css'; // Import CSS file
-import ColorEffect from './ColorEffect';
+import ColorEffect from '../Common/ColorEffect';
 
 const SplashScreen = () => {
   const [showSplash, setShowSplash] = useState(true);

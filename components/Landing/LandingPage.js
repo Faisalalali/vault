@@ -2,7 +2,7 @@
 import { useState } from 'react'
 import { Dialog } from '@headlessui/react'
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline'
-import ColorEffect from './ColorEffect'
+import ColorEffect from '../Common/ColorEffect'
 
 
 const navigation = [
