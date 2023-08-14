@@ -1,8 +1,7 @@
 // pages/api/collections/[collectionName].js
 import dbConnect from '@/lib/dbConnect';
 import Item from '@/models/Item';
-// import { getSession } from 'next-auth/react';
-
+import Collection from "@/models/Collection";
 
 export default async function handler(req, res) {
   const {
@@ -11,12 +10,13 @@ export default async function handler(req, res) {
     body,
   } = req;
 
-  /* const session = await getSession({ req });
+  const collectionId = req.query.collectionId;
+  const itemId = req.query.itemId;
 
+  /* const session = await getSession({ req });
   if (!session) {
     return res.status(401).json({ message: 'Unauthorized' });
   } */
-
 
   // Connect to the database
   await dbConnect();
@@ -29,13 +29,51 @@ export default async function handler(req, res) {
         }).sort({ createdAt: -1 });
         res.status(200).json(items);
         break;
-      case 'POST':
-        const newItem = new Item(body);
-        const item = await newItem.save();
-        res.status(201).json(item);
+      case "POST":
+        try {
+          const collection = await Collection.findOne({ name: collectionName });
+          if (!collection) {
+            console.error("Collection not found", collectionName);
+            return res.status(404).json({ message: "Collection not found." });
+          }
+          const newItem = req.body;
+          collection.items.push(newItem);
+          await collection.save();
+          res.status(201).json({ success: true, data: newItem });
+        } catch (error) {
+          console.error("Error adding item", error);
+          res.status(400).json({ message: "Something went wrong." });
+        }
         break;
-      default:
-        res.status(405).json({ message: 'Method Not Allowed' });
+      case "POST":
+        if (collectionId) {
+          // Handle adding an item to the collection
+          try {
+            const collection = await Collection.findById(collectionId);
+            if (!collection) {
+              return res.status(404).json({ message: "Collection not found." });
+            }
+            const newItem = req.body;
+            collection.items.push(newItem);
+            await collection.save();
+            res.status(201).json({ success: true, data: newItem });
+          } catch (error) {
+            res.status(400).json({ message: "Something went wrong." });
+          }
+        } else {
+          // Handle creating a new collection
+          try {
+            const newCollection = await Collection.create(req.body);
+            res.status(201).json({ success: true, data: newCollection });
+          } catch (error) {
+            res.status(400).json({ message: "Something went wrong." });
+          }
+        }
+        break;
+      case 'DELETE':
+        // Perform delete operation here
+        await Item.findByIdAndDelete(itemId);
+        res.status(200).json({ message: 'Item deleted' });
         break;
     }
   } catch (error) {
@@ -43,20 +81,4 @@ export default async function handler(req, res) {
     res.status(500).json({ message: 'Server Error' });
   }
   return;
-  if (req.method === 'GET') {
-    // Get collection info
-    const item = await collection.findOne({ name: collectionName });
-    if (!item) {
-      res.status(404).json({ message: 'Collection not found' });
-    } else {
-      res.status(200).json(item);
-    }
-  } else if (req.method === 'POST') {
-    // Create new item in the collection
-    const { newItem } = req.body;
-    const result = await collection.insertOne(newItem);
-    res.status(201).json(result.ops[0]);
-  } else {
-    res.status(405).json({ message: 'Method Not Allowed' });
-  }
 }

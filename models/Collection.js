@@ -1,6 +1,7 @@
 // models/collection.js
+
 import mongoose from 'mongoose';
-import Item from 'models/Item.js';
+import Item from './Item';
 
 const collectionSchema = new mongoose.Schema({
   name: {

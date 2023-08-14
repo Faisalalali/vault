@@ -19,7 +19,7 @@ const itemSchema = new mongoose.Schema({
   password: String,
   type: {
     type: String,
-    required: [true, "Please provide a type"],
+    required: [false, "Please provide a type"],
   },
   apiKey: {
     type: String,
@@ -33,13 +33,17 @@ const itemSchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  logo: {
+  icon: {
     type: String,
     required: [true, "Please provide a logo"],
   },
   notes: {
     type: String,
     required: false,
+  },
+  collectionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Collection",
   },
 });
 

@@ -1,3 +1,4 @@
+// component/Dashboard/Collection.js
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -7,7 +8,7 @@ import {
 import { CollectionItem } from './CollectionItem';
 import { AddItem } from './AddItem';
 
-export const Collection = ({ collection, index, scrollContainers, scrollPositions, setScrollPositions, setSelectedItem }) => {
+export const Collection = ({ collection, index, scrollContainers, scrollPositions, setScrollPositions, setSelectedItem, onItemAdded }) => {
 
   // Scroll stuff
   const handleScroll = () => {
@@ -23,11 +24,11 @@ export const Collection = ({ collection, index, scrollContainers, scrollPosition
     }));
   };
   const scrollLeft = () => {
-    scrollContainers[index].current.scrollTo({ left: scrollPositions[index] - 200, behavior: 'smooth' });
+    scrollContainers[index].current.scrollTo({ left: scrollPositions[index].actualWidth - 200, behavior: 'smooth' });
   };
 
   const scrollRight = () => {
-    scrollContainers[index].current.scrollTo({ left: scrollPositions[index] + 200, behavior: 'smooth' });
+    scrollContainers[index].current.scrollTo({ left: scrollPositions[index].actualWidth + 200, behavior: 'smooth' });
   };
 
   // Check if the container is scrollable. //TODO: This is not working
@@ -46,8 +47,8 @@ export const Collection = ({ collection, index, scrollContainers, scrollPosition
 
               {/* Card for the collection icon */}
               <div className="sticky left-0 pt-4">
-                <div className="w-12 h-12 p-2 bg-gray-200 rounded-2xl flex items-center">
-                  {collection.icon}
+                <div className="w-12 h-12 p-2 bg-gray-200 rounded-2xl flex justify-center">
+                  {'📁'}
                 </div>
               </div>
 
@@ -57,7 +58,7 @@ export const Collection = ({ collection, index, scrollContainers, scrollPosition
               ))}
 
               {/* Add new Element */}
-              {isAdmin && (<AddItem />)}
+              {isAdmin && (<AddItem collection={collection} onItemAdded={onItemAdded} />)}
             </div>
 
             {/* Arrows */}

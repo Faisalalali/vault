@@ -1,51 +1,38 @@
-// components/Dashboard.js
-import { useState, useRef, useEffect } from 'react';
-import { io } from 'socket.io-client';
-import { getCollections } from '../../utils/apiHelpers';
+// components/Dashboard/Dashboard.js
+import { useState, useEffect } from 'react';
+import EventSource from 'eventsource';
 
 import ItemInfoCard from './ItemInfoCard';
-import { Collection } from './Collection';
+import { Collection as CollectionContainer } from './Collection';
 import { AddCollection } from './AddCollection';
 
-const Dashboard = () => {
+const Dashboard = ({ collections: initialCollections }) => {
   const [scrollContainers, setScrollContainers] = useState([]);
   const [scrollPositions, setScrollPositions] = useState([]);
-  const [collections, setCollections] = useState([]);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [collections, setCollections] = useState(initialCollections);
 
   useEffect(() => {
-    // Function to fetch collections from the database
     async function fetchCollections() {
-      try {
-        const collections = await getCollections();
-        setCollections(collections);
-
-        // Create refs for each collection once we have the collections data
-        const newScrollContainers = collections.map(() => useRef(null));
-        setScrollContainers(newScrollContainers);
-      } catch (error) {
-        console.error('Error fetching collections:', error);
-      }
+      const res = await fetch('/api/collections');
+      const { data } = await res.json();
+      setCollections(data);
     }
 
-    // Fetch initial collections data
-    fetchCollections();
+    // Replace socket.io with Server-Sent Events (SSE)
+    const eventSource = new EventSource('/api/sse');
 
-    // Socket.io setup for real-time changes
-    const socket = io(
-      process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:3000'
-    );
-
-    // Listen for real-time changes and update the collections state accordingly
-    socket.on('databaseChange', (change) => {
-      fetchCollections();
-    });
-
-    // Clean up the socket connection on component unmount
-    return () => {
-      socket.disconnect();
+    eventSource.onmessage = (event) => {
+      if (event.data === 'update') {
+        fetchCollections();
+      }
     };
-  }, []); // Add collections as a dependency here
+
+    // Clean up the SSE connection on component unmount
+    return () => {
+      eventSource.close();
+    };
+  }, []);
 
   // Update the state with the scrollable and actual width of each container
   useEffect(() => {
@@ -65,22 +52,92 @@ const Dashboard = () => {
     };
   }, [scrollContainers]);
 
+  const onCollectionAdded = (newCollection) => {
+    setCollections([...collections, newCollection]);
+  };
+
+  const onItemAdded = (collectionId, newItem) => {
+    const collectionIndex = collections.findIndex(collection => collection._id === collectionId);
+    const newCollections = [...collections];
+    newCollections[collectionIndex].items.push(newItem);
+    setCollections(newCollections);
+  };
+
+  const onUpdateItem = async (collectionId, itemId, updatedItem) => {
+    try {
+      const response = await fetch(`/api/collections/${collectionId}/${itemId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updatedItem),
+      });
+
+      if (response.ok) {
+        const updatedCollections = collections.map((collection) => {
+          if (collection._id === collectionId) {
+            return {
+              ...collection,
+              items: collection.items.map((item) => {
+                if (item._id === itemId) {
+                  return updatedItem;
+                }
+                return item;
+              }),
+            };
+          }
+          return collection;
+        });
+        setCollections(updatedCollections);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
+  const onDeleteItem = async (collectionId, itemId) => {
+    try {
+      const response = await fetch(`/api/collections/${collectionId}/${itemId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const updatedCollections = collections.map((collection) => {
+          if (collection._id === collectionId) {
+            return {
+              ...collection,
+              items: collection.items.filter((item) => item._id !== itemId),
+            };
+          }
+          return collection;
+        });
+        setCollections(updatedCollections);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+
   return (
     <div className="bg-gray-50 min-h-screen">
-      {collections.map((collection, i) => (
-        <Collection
-          key={i}
-          collection={collection}
-          index={i}
-          scrollContainers={scrollContainers}
-          scrollPositions={scrollPositions}
-          setScrollPositions={setScrollPositions}
-          setSelectedItem={setSelectedItem} // Pass setSelectedItem to Collection
-        />
-      ))}
-      <ItemInfoCard selectedItem={selectedItem} onClose={() => setSelectedItem(null)} />
+      {
+        collections.map((collection, i) => (
+          <CollectionContainer
+            key={i}
+            collection={collection}
+            index={i}
+            scrollContainers={scrollContainers}
+            scrollPositions={scrollPositions}
+            setScrollPositions={setScrollPositions}
+            setSelectedItem={setSelectedItem}
+            onItemAdded={onItemAdded}
+          />
+        ))}
+      <ItemInfoCard selectedItem={selectedItem} onClose={() => setSelectedItem(null)} onUpdateItem={onUpdateItem} onDeleteItem={onDeleteItem} />
 
-      <AddCollection />
+      <AddCollection onCollectionAdded={onCollectionAdded} />
     </div>
   );
 };

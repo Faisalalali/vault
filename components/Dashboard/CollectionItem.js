@@ -1,4 +1,4 @@
-
+// component/Dashboard/CollectionItem.js
 export const CollectionItem = ({ item, onItemClick }) => {
   const handleClick = () => {
     onItemClick(item);
