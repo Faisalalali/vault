@@ -1,4 +1,4 @@
-// component/Dashboard/ItemInfoCard.js
+// component/Dashboard/ItemInfoCard/index.js
 import { useState } from 'react';
 
 const ItemInfoCard = ({ selectedItem, onClose, onUpdateItem, onDeleteItem }) => {
@@ -6,18 +6,19 @@ const ItemInfoCard = ({ selectedItem, onClose, onUpdateItem, onDeleteItem }) => 
   const [editedItem, setEditedItem] = useState({ ...selectedItem });
 
   if (!selectedItem) return null; // If no selectedItem, don't render the modal
+  const { collectionId, itemId } = selectedItem;
 
   const handleInputChange = (e) => {
     setEditedItem({ ...editedItem, [e.target.name]: e.target.value });
   };
 
   const handleUpdateClick = () => {
-    onUpdateItem(selectedItem._id, editedItem);
+    onUpdateItem(itemId, editedItem);
     setIsEditing(false);
   };
 
   const handleDeleteClick = () => {
-    onDeleteItem(selectedItem._id);
+    onDeleteItem(collectionId, itemId);
     onClose();
   };
 

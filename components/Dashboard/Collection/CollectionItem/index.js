@@ -1,4 +1,4 @@
-// component/Dashboard/CollectionItem.js
+// component/Dashboard/Collection/CollectionItem/index.js
 export const CollectionItem = ({ item, onItemClick }) => {
   const handleClick = () => {
     onItemClick(item);

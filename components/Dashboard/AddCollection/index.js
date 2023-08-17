@@ -1,4 +1,4 @@
-// component/Dashboard/AddCollection.js
+// component/Dashboard/AddCollection/index.js
 import { PlusIcon } from "@heroicons/react/24/solid";
 
 export const AddCollection = ({ onCollectionAdded }) => {

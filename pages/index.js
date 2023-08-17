@@ -10,7 +10,7 @@ export default function Home({ collections }) {
   return (
     <div>
       {/* <SplashScreen /> */}
-      <LandingPage />
+      {/* <LandingPage /> */}
       <Dashboard collections={collections} />
     </div>
   );

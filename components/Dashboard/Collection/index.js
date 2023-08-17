@@ -1,4 +1,4 @@
-// component/Dashboard/Collection.js
+// component/Dashboard/Collection/index.js
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -54,7 +54,7 @@ export const Collection = ({ collection, index, scrollContainers, scrollPosition
 
               {/* Cards for each item */}
               {collection.items.map((item, j) => (
-                <CollectionItem key={j} item={item} onItemClick={() => setSelectedItem(item)} />
+                <CollectionItem key={j} item={item} onItemClick={() => setSelectedItem({ collectionId: collection._id, itemId: item._id })} />
               ))}
 
               {/* Add new Element */}

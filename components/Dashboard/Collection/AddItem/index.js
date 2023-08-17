@@ -1,4 +1,4 @@
-// components/Dashboard/AddItem.js
+// components/Dashboard/Collection/AddItem/index.js
 import { useState } from 'react';
 import axios from 'axios';
 import { PlusIcon } from "@heroicons/react/24/solid";
@@ -13,15 +13,23 @@ export const AddItem = ({ collection, onItemAdded }) => {
 
   const handleClick = async () => {
     try {
-      const response = await axios.post(`/api/collections/${collection.name}`, newItem); // Make sure to send the collection._id here
+      const response = await fetch(`/api/collections/${collection._id}/items`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ item: newItem }),
+      });
+      
       if (response.status === 201) {
-        onItemAdded(collection._id, response.data.data);
+        const result = await response.json();
+        onItemAdded(collection._id, result.data);
         setShowModal(false);
       }
     } catch (error) {
       console.error(error);
     }
-  };  
+  };
 
   const handleAddClick = () => {
     setShowModal(true); // Open modal on click

@@ -97,6 +97,7 @@ const Dashboard = ({ collections: initialCollections }) => {
 
 
   const onDeleteItem = async (collectionId, itemId) => {
+    console.log(collectionId, itemId);
     try {
       const response = await fetch(`/api/collections/${collectionId}/${itemId}`, {
         method: 'DELETE',
